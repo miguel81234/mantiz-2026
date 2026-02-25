@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../pages/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" />
+</head>
+<body>
+  <header>
+    <h2>Product Catalog</h2>
+  </header>
+
+  <nav>
+    <aside>
+      <ul>
+        <li><a href="#">Category 1</a></li>
+        <li><a href="#">Category 2</a></li>
+        <li><a href="#">Category 3</a></li>
+      </ul>
+    </aside>
+
+    <div class="container">
+      <div id="productList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Productos serán cargados aquí dinámicamente -->
+      </div>
+      <p id="noProducts" class="text-center hidden mt-4">No products available yet. Check back later!</p>
+    </div>
+  </nav>
+
+  <script>
+    const API_URL = 'http://localhost:3000/api';
+    const productList = document.getElementById('productList');
+    const noProducts = document.getElementById('noProducts');
+
+    // SSE connection
+    const productEventSource = new EventSource(`${API_URL}/products/stream`);
+
+    productEventSource.onmessage = (event) => {
+      console.log('Received product update:', event.data);
+      const products = JSON.parse(event.data);
+      renderProducts(products);
+    };
+
+    productEventSource.onerror = (error) => {
+      console.error('Product SSE error:', error);
+      if (error.target.readyState === EventSource.CLOSED) {
+        console.log('SSE connection closed. Attempting to reconnect...');
+      }
+    };
+
+    function renderProducts(products) {
+      if (!productList || !noProducts) return;
+
+      productList.innerHTML = '';
+
+      if (products.length === 0) {
+        noProducts.classList.remove('hidden');
+        return;
+      }
+
+      noProducts.classList.add('hidden');
+
+      products.forEach(product => {
+        const div = document.createElement('div');
+        div.className = 'relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full';
+
+        const image1 = `../assets/images/product${product.codigo_producto}_1.jpg`;
+        const image2 = `../assets/images/product${product.codigo_producto}_2.jpg`;
+
+        div.innerHTML = `
+          <div class="relative w-full h-30 flex items-center justify-center overflow-hidden">
+            <a href="producto${product.codigo_producto}.html">
+              <img src="${image1}" alt="${product.nombre_producto}" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0">
+            </a>
+            <a href="producto${product.codigo_producto}.html">
+              <img src="${image2}" alt="${product.nombre_producto} Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100">
+            </a>
+          </div>
+          <h3 class="text-xl text-center font-bold mt-4">${product.nombre_producto}</h3>
+          <p class="text-sm text-center">Price: $${product.precio_producto}</p>
+        `;
+
+        productList.appendChild(div);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // initial fetch could go here, but SSE handles updates
+    });
+  </script>
+</body>
+</html>

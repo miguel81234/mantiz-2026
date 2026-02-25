@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://kit.fontawesome.com/6674bb917f.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../pages/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="admin-header">
+      <h1>Admin Panel</h1>
+    </div>
+    <div class="left-header">
+      <input type="text" id="search" placeholder=" Search...">
+      <button><i class="fa-solid fa-bell"></i></button>
+      <button><i class="fa-solid fa-user"></i></button>
+    </div>
+  </header>
+
+  <div class="MenuBoton">
+    <button id="toggleMenu" class="BotonMenuMin md:hidden bg-gray-700 text-white p-2 m-2 rounded">
+      ☰ Menu
+    </button>
+  </div>
+
+  <nav>
+    <aside id="sideMenu" class="hidden md:block">
+      <ul>
+        <li class="active"><a href="usuarios.html">Dashboard</a></li>
+        <li><a href="usuarios.html">Users</a></li>
+        <li><a href="productos.html">Products</a></li>
+        <li><a href="pedidos.html">Orders</a></li>
+        <li><a href="ventas.html">Sales</a></li>
+      </ul>
+    </aside>
+
+    <div class="container">
+      <form id="productForm" class="Productform">
+        <h1>Dashboard <p>Agregar productos</p></h1>
+
+        <!-- PRIMERA IMAGEN -->
+        <div class="image-crop-container">
+          <div class="image-box" id="image-box">
+            <img id="image-preview" alt="Vista previa de la imagen">
+          </div>
+          <div class="crop-controls">
+            <label for="file-input">Seleccionar Imagen:</label>
+            <input type="file" id="file-input" class="informationimg" accept="image/*">
+            <button onclick="enableCropBox()" class="crop-btn hidden"><i class="fa-solid fa-scissors"></i></button>
+            <button onclick="applyCrop()" class="crop-btn hidden"><i class="fa-solid fa-check"></i></button>
+            <button onclick="discardCrop()" class="crop-btn hidden"><i class="fa-solid fa-x"></i></button>
+          </div>
+        </div>
+
+        <!-- SEGUNDA IMAGEN -->
+        <div class="image-crop-container">
+          <div class="image-box" id="image-box-2">
+            <img id="image-preview-2" alt="Vista previa de la imagen 2">
+          </div>
+          <div class="crop-controls">
+            <label for="file-input-2">Seleccionar Segunda Imagen:</label>
+            <input type="file" id="file-input-2" class="informationimg" accept="image/*">
+            <button onclick="enableCropBox2()" class="crop-btn-2 hidden"><i class="fa-solid fa-scissors"></i></button>
+            <button onclick="applyCrop2()" class="crop-btn-2 hidden"><i class="fa-solid fa-check"></i></button>
+            <button onclick="discardCrop2()" class="crop-btn-2 hidden"><i class="fa-solid fa-x"></i></button>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="block mb-1">Nombre del producto</label>
+          <input type="text" id="productName" class="information" required>
+        </div>
+        <div class="mb-4">
+          <label class="block mb-1">Precio</label>
+          <input type="number" placeholder="$" step="1" id="productPrice" class="information" required>
+        </div>
+        <button type="submit" class="bg-green-500 px-4 py-2 rounded"
+          onclick="window.location.href='productos.html'; return false;">Add Product</button>
+      </form>
+      <div id="productSuccess" class="mt-2 text-green-500 hidden">Product added successfully!</div>
+      <div id="productError" class="mt-2 text-red-500 hidden"></div>
+    </div>
+  </nav>
+
+  <script>
+    const API_URL = 'http://localhost:3000/api';
+
+    let cropper2;
+    let originalImageURL2 = '';
+    let cropBoxEnabled2 = false;
+
+    document.getElementById('file-input-2').addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      const img = document.getElementById('image-preview-2');
+      const imageBox = document.getElementById('image-box-2');
+      const cropButtons = document.querySelectorAll('.crop-btn-2');
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          originalImageURL2 = e.target.result;
+          img.src = originalImageURL2;
+          img.style.display = 'block';
+          imageBox.classList.add('has-image');
+
+          cropButtons.forEach(btn => btn.classList.remove('hidden'));
+
+          img.onload = () => {
+            if (cropper2) cropper2.destroy();
+            cropper2 = new Cropper(img, {
+              viewMode: 0,
+              dragMode: 'move',
+              autoCrop: false,
+              background: false,
+              movable: true,
+              scalable: true,
+              zoomable: true,
+              rotatable: true,
+              cropBoxMovable: true,
+              cropBoxResizable: true,
+              responsive: true
+            });
+            cropBoxEnabled2 = false;
+          };
+        };
+        reader.readAsDataURL(file);
+      } else {
+        if (cropper2) cropper2.destroy();
+        img.src = '';
+        img.style.display = 'none';
+        imageBox.classList.remove('has-image');
+        cropButtons.forEach(btn => btn.classList.add('hidden'));
+      }
+    });
+
+    function enableCropBox2() {
+      if (cropper2 && !cropBoxEnabled2) {
+        cropper2.setCropBoxData({ width: 200, height: 200 });
+        cropper2.crop();
+        cropBoxEnabled2 = true;
+      }
+    }
+
+    function applyCrop2() {
+      if (cropper2 && cropBoxEnabled2) {
+        const canvas = cropper2.getCroppedCanvas();
+        const img = document.getElementById('image-preview-2');
+        img.src = canvas.toDataURL();
+        cropper2.destroy();
+        cropper2 = null;
+        cropBoxEnabled2 = false;
+      }
+    }
+
+    function discardCrop2() {
+      const img = document.getElementById('image-preview-2');
+      img.src = originalImageURL2;
+      if (cropper2) {
+        cropper2.destroy();
+        cropper2 = null;
+        cropBoxEnabled2 = false;
+      }
+    }
+
+    let cropper;
+    let originalImageURL = '';
+    let cropBoxEnabled = false;
+
+    document.getElementById('file-input').addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      const img = document.getElementById('image-preview');
+      const imageBox = document.getElementById('image-box');
+      const cropButtons = document.querySelectorAll('.crop-btn');
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          originalImageURL = e.target.result;
+          img.src = originalImageURL;
+          img.style.display = 'block';
+          imageBox.classList.add('has-image');
+
+          cropButtons.forEach(btn => btn.classList.remove('hidden'));
+
+          img.onload = () => {
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(img, {
+              viewMode: 0,
+              dragMode: 'move',
+              autoCrop: false,
+              background: false,
+              movable: true,
+              scalable: true,
+              zoomable: true,
+              rotatable: true,
+              cropBoxMovable: true,
+              cropBoxResizable: true,
+              responsive: true
+            });
+            cropBoxEnabled = false;
+          };
+        };
+        reader.readAsDataURL(file);
+      } else {
+        if (cropper) cropper.destroy();
+        img.src = '';
+        img.style.display = 'none';
+        imageBox.classList.remove('has-image');
+        cropButtons.forEach(btn => btn.classList.add('hidden'));
+      }
+    });
+
+    function enableCropBox() {
+      if (cropper && !cropBoxEnabled) {
+        cropper.setCropBoxData({
+          width: 200,
+          height: 200
+        });
+        cropper.crop();
+        cropBoxEnabled = true;
+      }
+    }
+
+    function applyCrop() {
+      if (cropper && cropBoxEnabled) {
+        const canvas = cropper.getCroppedCanvas();
+        const img = document.getElementById('image-preview');
+        img.src = canvas.toDataURL();
+        cropper.destroy();
+        cropper = null;
+        cropBoxEnabled = false;
+      }
+    }
+
+    function discardCrop() {
+      const img = document.getElementById('image-preview');
+      img.src = originalImageURL;
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+        cropBoxEnabled = false;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleMenuBtn = document.getElementById('toggleMenu');
+      const sideMenu = document.getElementById('sideMenu');
+
+      toggleMenuBtn.addEventListener('click', () => {
+        sideMenu.classList.toggle('hidden');
+      });
+
+      const productForm = document.getElementById('productForm');
+      if (productForm) {
+        productForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const product = {
+            nombre_producto: document.getElementById('productName').value,
+            precio_producto: parseFloat(document.getElementById('productPrice').value)
+          };
+
+          try {
+            const response = await fetch(`${API_URL}/products`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(product)
+            });
+
+            if (response.ok) {
+              productForm.reset();
+              document.getElementById('productSuccess').classList.remove('hidden');
+              document.getElementById('productError').classList.add('hidden');
+              setTimeout(() => document.getElementById('productSuccess').classList.add('hidden'), 5000);
+            } else {
+              const errorData = await response.json();
+              throw new Error(errorData.message || 'Product creation failed');
+            }
+          } catch (error) {
+            document.getElementById('productError').textContent = error.message;
+            document.getElementById('productError').classList.remove('hidden');
+            document.getElementById('productSuccess').classList.add('hidden');
+          }
+        });
+      }
+    });
+
+    function showSection(section) {
+      const sections = document.querySelectorAll('.section');
+      sections.forEach(sec => sec.classList.remove('active'));
+
+      const target = document.getElementById(`${section}-section`);
+      if (target) target.classList.add('active');
+    }
+
+    let currentMode = 'sticker';
+
+    function resizeImage() {
+      const img = document.getElementById('image-preview');
+      const size = parseInt(document.getElementById('image-size').value);
+      img.style.width = size + 'px';
+      const cmEquivalent = (size / 100) * 1;
+      document.getElementById('measurement-output').textContent = cmEquivalent.toFixed(1) + ' cm';
+    }
+
+    function setImageSize(size) {
+      const img = document.getElementById('image-preview');
+      img.style.width = size + 'px';
+      const cmEquivalent = (size / 100) * 1;
+      document.getElementById('measurement-output').textContent = cmEquivalent.toFixed(1) + ' cm';
+    }
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      image.style.cursor = 'default';
+    });
+  </script>
+
+  <!-- 🔁 AGREGADO: Script para actualizar productos en tiempo real -->
+  <script>
+    if (window.location.pathname.includes("productos.html")) {
+      async function fetchProducts() {
+        try {
+          const response = await fetch('http://localhost:3000/api/products');
+          const products = await response.json();
+          const productList = document.getElementById('productList');
+
+          if (productList) {
+            productList.innerHTML = '';
+            products.forEach(product => {
+              const div = document.createElement('div');
+              div.className = 'bg-white p-4 rounded shadow';
+              div.innerHTML = `
+                <h2 class="text-lg font-semibold">${product.nombre_producto}</h2>
+                <p class="text-gray-600">Precio: $${product.precio_producto}</p>
+              `;
+              productList.appendChild(div);
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching products:', err);
+        }
+      }
+
+      fetchProducts();
+      setInterval(fetchProducts, 5000);
+    }
+  </script>
+</body>
+</html>

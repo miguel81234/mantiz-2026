@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrarse</title>
+  <link rel="stylesheet" href="../css/style-login.css"/>
+</head>
+<body>
+
+  <div class="login-container">
+
+    <div class="login-card">
+
+      <div class="logo">
+        <img src="../assets/images/logo-mantiz.png" alt="Logo">
+      </div>
+
+      <h2>Registrarse</h2>
+      <form id="signinForm">
+
+        <div class="input-group">
+          <label>Usuario</label>
+          <input type="text" id="username" required>
+        </div>
+
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="email" required>
+        </div>
+
+        <div class="input-group">
+          <label>Contraseña</label>
+          <input type="password" id="password" required>
+        </div>
+
+        <button type="submit" class="btn-login">Crear cuenta</button>
+
+        <p class="msg" id="msg"></p>
+
+        <div class="links">
+          <a href="Login.html">Ya tienes una cuenta?</a>
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  <script>
+    const form = document.getElementById('signinForm');
+    const msg = document.getElementById('msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // Evita que la página se recargue
+
+      msg.textContent = '';
+      msg.className = 'msg'; // Resetea estilos
+
+      // Obtenemos los valores
+      const username = document.getElementById('username').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      // Validación básica en frontend
+      if (!username || !email || !password) {
+        msg.textContent = 'Completa todos los campos';
+        msg.className = 'msg error';
+        return;
+      }
+
+      // Datos a enviar al backend
+      const data = {
+        username,
+        email,
+        password
+      };
+
+      console.log('Enviando datos al servidor:', data);
+
+      try {
+        const response = await fetch('http://localhost:3000/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.ok) {
+          msg.textContent = '¡Registro exitoso! Redirigiendo al login...';
+          msg.className = 'msg success';
+
+          // Limpia el formulario
+          form.reset();
+
+          // Redirige después de 2 segundos
+          setTimeout(() => {
+            window.location.href = '../pages/login.html';
+          }, 2000);
+        } else {
+          msg.textContent = result.message || 'Error al registrar usuario';
+          msg.className = 'msg error';
+        }
+
+      } catch (err) {
+        console.error('Error de conexión:', err);
+        msg.textContent = 'No se pudo conectar con el servidor';
+        msg.className = 'msg error';
+      }
+    });
+  </script>
+
+  <style>
+    .msg {
+      margin-top: 12px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .msg.success { color: #22c55e; }
+    .msg.error   { color: #ef4444; }
+  </style>
+</body>
+</html>

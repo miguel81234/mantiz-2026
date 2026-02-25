@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <link rel="stylesheet" href="../css/style-login.css" />
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-card">
+
+      <div class="logo">
+        <img src="../assets/images/logo-mantiz.png" alt="Logo">
+      </div>
+
+      <h2>Iniciar sesión</h2>
+
+      <form id="loginForm">
+
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="email" required>
+        </div>
+
+        <div class="input-group">
+          <label>Contraseña</label>
+          <input type="password" id="password" required>
+        </div>
+
+        <button type="submit" class="btn-login">Acceder</button>
+
+        <p class="msg" id="msg"></p>
+
+        <div class="links">
+          <a href="Forgot.html">Olvidaste tu contraseña?</a>
+          <a href="../pages/crear_cuenta.html">No tienes una cuenta?</a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const msg = document.getElementById('msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      msg.textContent = '';
+      msg.className = 'msg';
+
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        msg.textContent = 'Completa todos los campos';
+        msg.className = 'msg error';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.ok) {
+          msg.textContent = `¡Bienvenido, ${data.usuario.nombre}!`;
+          msg.className = 'msg success';
+        } else {
+          msg.textContent = data.message || 'Credenciales incorrectas';
+          msg.className = 'msg error';
+        }
+
+      } catch (error) {
+        console.error('Error:', error);
+        msg.textContent = 'Error de conexión';
+        msg.className = 'msg error';
+      }
+    });
+  </script>
+
+  <style>
+    .msg { margin-top: 12px; text-align: center; font-weight: bold; font-size: 14px; }
+    .msg.success { color: #22c55e; }
+    .msg.error   { color: #ef4444; }
+  </style>
+
+</body>
+</html>
