@@ -45,20 +45,20 @@
 
   <script>
     const form = document.getElementById('loginForm');
-    const msg = document.getElementById('msg');
+    const msg  = document.getElementById('msg');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       msg.textContent = '';
-      msg.className = 'msg';
+      msg.className   = 'msg';
 
       const email    = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
       if (!email || !password) {
         msg.textContent = 'Completa todos los campos';
-        msg.className = 'msg error';
+        msg.className   = 'msg error';
         return;
       }
 
@@ -72,17 +72,31 @@
         const data = await response.json();
 
         if (response.ok && data.ok) {
+          // Guardar token y usuario en localStorage
+          localStorage.setItem('token',   data.token);
+          localStorage.setItem('usuario', JSON.stringify(data.usuario));
+
           msg.textContent = `¡Bienvenido, ${data.usuario.nombre}!`;
-          msg.className = 'msg success';
+          msg.className   = 'msg success';
+
+          // Redirigir según rol después de 2 segundos
+          setTimeout(() => {
+            if (data.usuario.rol === 'admin') {
+              window.location.href = '../pages/admin.html';
+            } else {
+              window.location.href = '../pages/index.html';
+            }
+          }, 2000);
+
         } else {
           msg.textContent = data.message || 'Credenciales incorrectas';
-          msg.className = 'msg error';
+          msg.className   = 'msg error';
         }
 
       } catch (error) {
         console.error('Error:', error);
         msg.textContent = 'Error de conexión';
-        msg.className = 'msg error';
+        msg.className   = 'msg error';
       }
     });
   </script>

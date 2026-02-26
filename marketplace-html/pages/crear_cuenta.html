@@ -9,7 +9,6 @@
 <body>
 
   <div class="login-container">
-
     <div class="login-card">
 
       <div class="logo">
@@ -17,11 +16,12 @@
       </div>
 
       <h2>Registrarse</h2>
+
       <form id="signinForm">
 
         <div class="input-group">
-          <label>Usuario</label>
-          <input type="text" id="username" required>
+          <label>Nombre</label>
+          <input type="text" id="nombre" required>
         </div>
 
         <div class="input-group">
@@ -39,90 +39,75 @@
         <p class="msg" id="msg"></p>
 
         <div class="links">
-          <a href="Login.html">Ya tienes una cuenta?</a>
+          <a href="login.html">Ya tienes una cuenta?</a>
         </div>
 
       </form>
 
     </div>
-
   </div>
 
   <script>
     const form = document.getElementById('signinForm');
-    const msg = document.getElementById('msg');
+    const msg  = document.getElementById('msg');
 
     form.addEventListener('submit', async (e) => {
-      e.preventDefault(); // Evita que la página se recargue
+      e.preventDefault();
 
       msg.textContent = '';
-      msg.className = 'msg'; // Resetea estilos
+      msg.className   = 'msg';
 
-      // Obtenemos los valores
-      const username = document.getElementById('username').value.trim();
+      const nombre   = document.getElementById('nombre').value.trim();
       const email    = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
-      // Validación básica en frontend
-      if (!username || !email || !password) {
+      if (!nombre || !email || !password) {
         msg.textContent = 'Completa todos los campos';
-        msg.className = 'msg error';
+        msg.className   = 'msg error';
         return;
       }
 
-      // Datos a enviar al backend
-      const data = {
-        username,
-        email,
-        password
-      };
-
-      console.log('Enviando datos al servidor:', data);
-
       try {
-        const response = await fetch('http://localhost:3000/api/register', {
+        const response = await fetch('/api/register', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, email, password })
         });
 
         const result = await response.json();
 
         if (response.ok && result.ok) {
-          msg.textContent = '¡Registro exitoso! Redirigiendo al login...';
-          msg.className = 'msg success';
+          // Guardar token y usuario en localStorage
+          localStorage.setItem('token',   result.token);
+          localStorage.setItem('usuario', JSON.stringify(result.usuario));
 
-          // Limpia el formulario
+          msg.textContent = '¡Registro exitoso! Redirigiendo...';
+          msg.className   = 'msg success';
+
           form.reset();
 
-          // Redirige después de 2 segundos
           setTimeout(() => {
             window.location.href = '../pages/login.html';
           }, 2000);
+
         } else {
           msg.textContent = result.message || 'Error al registrar usuario';
-          msg.className = 'msg error';
+          msg.className   = 'msg error';
         }
 
       } catch (err) {
-        console.error('Error de conexión:', err);
+        console.error('Error:', err);
         msg.textContent = 'No se pudo conectar con el servidor';
-        msg.className = 'msg error';
+        msg.className   = 'msg error';
       }
     });
   </script>
 
   <style>
-    .msg {
-      margin-top: 12px;
-      text-align: center;
-      font-weight: bold;
-      font-size: 14px;
-    }
+    .msg { margin-top: 12px; text-align: center; font-weight: bold; font-size: 14px; }
     .msg.success { color: #22c55e; }
     .msg.error   { color: #ef4444; }
   </style>
+
 </body>
 </html>
